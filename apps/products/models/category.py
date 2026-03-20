@@ -6,7 +6,6 @@ from apps.core.models import BaseModel
 class Category(BaseModel):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
-
     parent = models.ForeignKey(
         "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
     )

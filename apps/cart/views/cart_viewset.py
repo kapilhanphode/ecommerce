@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.cart.services.cart_service import add_to_cart
 from apps.cart.selectors.cart_selector import get_cart_with_items
+from apps.cart.serializers.cart_serializer import CartSerializer
 from apps.products.models import ProductVariant
 from apps.cart.models import Cart
 
@@ -14,7 +15,6 @@ class CartViewSet(ViewSet):
         cart = get_cart_with_items(user=request.user)
         if not cart:
             return Response({"items": []})
-        from apps.cart.serializers.cart_serializer import CartSerializer
         return Response(CartSerializer(cart).data)
 
     def create(self, request):
