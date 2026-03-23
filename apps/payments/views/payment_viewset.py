@@ -11,9 +11,9 @@ class PaymentViewSet(ViewSet):
 
     def create(self, request):
         order_id = request.data.get("order")
-
+        print('order_id>>>>>>>>>>>>>>>>>', order_id)
         order = Order.objects.get(id=order_id, user=request.user)
-
+        print('order>>>>>>>>>>>>>>>>>', order)
         payment = create_payment(order)
 
         # simulate success (later integrate real gateway)
