@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     'apps.inventory',
     'apps.analytics',
     'apps.vendor_orders',
+    'apps.wallet',
+    'apps.returns',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
@@ -157,3 +160,10 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@test.com'
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"

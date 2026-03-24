@@ -5,7 +5,10 @@ from apps.payments.models import Payment
 from apps.orders.models import Order
 from apps.inventory.services.inventory_service import release_stock
 from apps.inventory.selectors.inventory_selector import get_inventory_by_variant
+from apps.wallet.services.wallet_service import credit_wallet
 from apps.payments.services.earnings_service import calculate_earnings
+from apps.notifications.services.email_service import send_email
+from apps.notifications.utils.email_templates import payment_success_email
 
 COMMISSION_PERCENTAGE = Decimal("10.0")
 
@@ -27,6 +30,8 @@ def process_payment(payment: Payment, success=True):
         order = payment.order
         order.status = "paid"
         order.save()
+        email = payment_success_email(order)
+        send_email(email["subject"], email["message"], [order.user.email])
 
         # 🔥 NEW LOGIC: SPLIT PER VENDOR
         vendor_totals = defaultdict(Decimal)
@@ -50,6 +55,11 @@ def process_payment(payment: Payment, success=True):
                 provider=payment.provider,
                 vendor=vendor
             )
+            credit_wallet(
+                user=vendor,
+                amount=vendor_earning,
+                description=f"Earning from order {order.id}"
+            )
 
     else:
         payment.status = "failed"
@@ -61,23 +71,3 @@ def process_payment(payment: Payment, success=True):
     payment.save()
     return payment
 
-# def process_payment(payment: Payment, success=True):
-#     if success:
-#         payment.status = "success"
-#         payment.transaction_id = str(uuid.uuid4())
-#         platform_fee, vendor_earning = calculate_earnings(payment.order)
-#         payment.platform_fee = platform_fee
-#         payment.vendor_earning = vendor_earning
-#
-#         # update order
-#         order = payment.order
-#         order.status = "paid"
-#         order.save()
-#     else:
-#         payment.status = "failed"
-#         # release stock back
-#         for item in payment.order.items.all():
-#             inventory = get_inventory_by_variant(item.variant)
-#             release_stock(inventory, item.quantity)
-#     payment.save()
-#     return payment
