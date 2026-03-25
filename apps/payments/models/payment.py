@@ -28,6 +28,16 @@ class Payment(BaseModel):
         blank=True,
         related_name="vendor_payments"
     )
+    idempotency_key = models.CharField(max_length=255, unique=True, null=True, blank=True)
 
     def __str__(self):
         return str(self.id)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["order"]),
+            models.Index(fields=["vendor"]),
+            models.Index(fields=["status"]),
+            models.Index(fields=["transaction_id"]),
+            models.Index(fields=["idempotency_key"]),
+        ]

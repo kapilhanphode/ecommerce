@@ -16,19 +16,28 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+
+def home(request):
+    return JsonResponse({
+        "message": "Ecommerce API is running 🚀"
+    })
+
 
 urlpatterns = [
+    path('', home),
     path('admin/', admin.site.urls),
-    path('api/', include('apps.products.urls')),
-    path('api/auth/', include('apps.accounts.urls')),
-    path('api/cart/', include('apps.cart.urls')),
-    path('api/orders/', include('apps.orders.urls')),
-    path('api/payments/', include('apps.payments.urls')),
-    path('api/shipping/', include('apps.shipping.urls')),
-    path('api/reviews/', include('apps.reviews.urls')),
-    path('api/inventory/', include('apps.inventory.urls')),
-    path('api/analytics/', include('apps.analytics.urls')),
-    path('api/vendor/orders/', include('apps.vendor_orders.urls')),
-    path('api/wallet/', include('apps.wallet.urls')),
-    path('api/returns/', include('apps.returns.urls')),
+    path('api/v1/', include('apps.products.urls')),
+    path('api/v1/auth/', include('apps.accounts.urls')),
+    path('api/v1/cart/', include('apps.cart.urls')),
+    path('api/v1/orders/', include('apps.orders.urls')),
+    path('api/v1/payments/', include('apps.payments.urls')),
+    path('api/v1/shipping/', include('apps.shipping.urls')),
+    path('api/v1/reviews/', include('apps.reviews.urls')),
+    path('api/v1/inventory/', include('apps.inventory.urls')),
+    path('api/v1/analytics/', include('apps.analytics.urls')),
+    path('api/v1/vendor/orders/', include('apps.vendor_orders.urls')),
+    path('api/v1/wallet/', include('apps.wallet.urls')),
+    path('api/v1/returns/', include('apps.returns.urls')),
 ]

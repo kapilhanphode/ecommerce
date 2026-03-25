@@ -12,3 +12,9 @@ class OrderItem(BaseModel):
 
     def __str__(self):
         return str(self.id)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["order"]),
+            models.Index(fields=["variant"]),
+        ]

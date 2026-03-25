@@ -21,6 +21,9 @@ class Product(BaseModel):
 
     class Meta:
         indexes = [
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["created_by"]),
+            models.Index(fields=["category"]),
             models.Index(fields=["slug"]),
             models.Index(fields=["is_active"]),
         ]

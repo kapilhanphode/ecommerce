@@ -18,3 +18,10 @@ class Order(BaseModel):
 
     def __str__(self):
         return str(self.id)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user"]),
+            models.Index(fields=["status"]),
+            models.Index(fields=["created_at"]),
+        ]

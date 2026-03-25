@@ -21,6 +21,7 @@ class ProductVariant(BaseModel):
 
     class Meta:
         indexes = [
+            models.Index(fields=["product"]),
             models.Index(fields=["sku"]),
             models.Index(fields=["is_active"]),
         ]

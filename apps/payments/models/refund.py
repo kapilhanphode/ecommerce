@@ -16,3 +16,9 @@ class Refund(BaseModel):
 
     def __str__(self):
         return f"Refund {self.order.id} - {self.amount}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["order"]),
+            models.Index(fields=["status"]),
+        ]

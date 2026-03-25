@@ -1,7 +1,9 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.response import Response
+from django.core.cache import cache
 
+from apps.core.responses import success_response
 from apps.products.models import Product
 from apps.products.serializers.product_serializer import ProductSerializer
 from apps.products.selectors.product_selector import (
@@ -28,15 +30,57 @@ class ProductViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = get_active_products()
-        if user.is_authenticated and user.role == "vendor":
-            return queryset.filter(created_by=user)
+        cache_key = f"product_list_{user.id if user.is_authenticated else 'anon'}"
+        queryset = cache.get(cache_key)
+        if not queryset:
+            queryset = get_active_products().select_related("category").prefetch_related(
+                "variants", "images"
+            )
+
+            if user.is_authenticated and user.role == "vendor":
+                queryset = queryset.filter(created_by=user)
+            cache.set(cache_key, queryset, timeout=60)
         return queryset
 
     def retrieve(self, request, pk=None):
-        product = get_product_by_id(pk)
+        cache_key = f"product_{pk}"
+
+        product = cache.get(cache_key)
+
+        if not product:
+            product = get_product_by_id(pk)
+            product = Product.objects.select_related("category").prefetch_related(
+                "variants", "images"
+            ).get(id=product.id)
+
+            cache.set(cache_key, product, timeout=60)
+
         serializer = self.get_serializer(product)
-        return Response(serializer.data)
+        return success_response(data=[serializer.data], message="Product successfully retrieved")
+        # return Response(serializer.data)
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        product = serializer.save(created_by=self.request.user)
+
+        # 🔥 CLEAR CACHE
+        cache.delete_pattern("product_list_*")
+
+        return product
+
+    def perform_update(self, serializer):
+        product = serializer.save()
+
+        # 🔥 CLEAR CACHE
+        cache.delete_pattern("product_list_*")
+        cache.delete(f"product_{product.id}")
+
+        return product
+
+    def perform_destroy(self, instance):
+        product_id = instance.id
+
+        instance.delete()
+
+        # 🔥 CLEAR CACHE
+        cache.delete_pattern("product_list_*")
+        cache.delete(f"product_{product_id}")

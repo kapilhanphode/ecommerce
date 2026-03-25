@@ -1,15 +1,16 @@
 from decimal import Decimal
 from rest_framework.exceptions import ValidationError
+from django.db import transaction
 from apps.wallet.models import Wallet, WalletTransaction, Payout
 
 
+@transaction.atomic
 def request_payout(user, amount):
     wallet = Wallet.objects.filter(user=user).first()
 
     if not wallet or wallet.balance < amount:
         raise ValidationError({"message": "Insufficient balance"})
 
-    print('amount..................',amount)
     # deduct immediately
     wallet.balance -= amount
     wallet.save()

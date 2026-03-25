@@ -32,9 +32,11 @@ def release_stock(inventory, quantity):
 
 
 def deduct_stock(inventory, quantity):
-    inventory.stock -= quantity
-    inventory.reserved_stock -= quantity
-    inventory.save()
+    def deduct_stock(inventory, quantity):
+        if inventory.stock < quantity:
+            raise Exception("Not enough stock")
+        inventory.stock -= quantity
+        inventory.save()
 
     StockMovement.objects.create(
         inventory=inventory,

@@ -13,3 +13,8 @@ class Inventory(BaseModel):
 
     def __str__(self):
         return str(self.variant)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["variant"]),
+        ]

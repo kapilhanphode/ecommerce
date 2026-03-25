@@ -9,39 +9,66 @@ from apps.wallet.services.wallet_service import credit_wallet
 from apps.payments.services.earnings_service import calculate_earnings
 from apps.notifications.services.email_service import send_email
 from apps.notifications.utils.email_templates import payment_success_email
+from django.db import transaction
 
 COMMISSION_PERCENTAGE = Decimal("10.0")
 
 
+def create_payment(order: Order, idempotency_key=None):
+    if idempotency_key:
+        existing = Payment.objects.filter(idempotency_key=idempotency_key).first()
+        if existing:
+            return existing, True
 
-def create_payment(order: Order):
-    return Payment.objects.create(
+    payment = Payment.objects.create(
         order=order,
         amount=order.total_amount,
-        status="pending"
+        status="pending",
+        idempotency_key=idempotency_key
     )
+    return payment, False
 
 
+from django.db import transaction
+
+@transaction.atomic
 def process_payment(payment: Payment, success=True):
+
+    # 🔒 LOCK PAYMENT ROW
+    payment = Payment.objects.select_for_update().get(id=payment.id)
+
+    if payment.status == "success":
+        return payment
+
     if success:
         payment.status = "success"
         payment.transaction_id = str(uuid.uuid4())
 
         order = payment.order
-        order.status = "paid"
-        order.save()
-        email = payment_success_email(order)
-        send_email(email["subject"], email["message"], [order.user.email])
 
-        # 🔥 NEW LOGIC: SPLIT PER VENDOR
+        if order.status != "paid":
+            order.status = "paid"
+            order.save()
+
+            email = payment_success_email(order)
+            send_email(email["subject"], email["message"], [order.user.email])
+
         vendor_totals = defaultdict(Decimal)
 
-        for item in order.items.all():
+        for item in order.items.select_related("variant__product__created_by"):
             vendor = item.variant.product.created_by
             vendor_totals[vendor] += item.price * item.quantity
 
-        # 🔥 CREATE PAYMENT PER VENDOR
         for vendor, total in vendor_totals.items():
+
+            already_exists = Payment.objects.filter(
+                order=order,
+                vendor=vendor
+            ).exists()
+
+            if already_exists:
+                continue
+
             platform_fee = (total * COMMISSION_PERCENTAGE) / 100
             vendor_earning = total - platform_fee
 
@@ -55,6 +82,7 @@ def process_payment(payment: Payment, success=True):
                 provider=payment.provider,
                 vendor=vendor
             )
+
             credit_wallet(
                 user=vendor,
                 amount=vendor_earning,
@@ -70,4 +98,3 @@ def process_payment(payment: Payment, success=True):
 
     payment.save()
     return payment
-

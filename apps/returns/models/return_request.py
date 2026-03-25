@@ -16,3 +16,9 @@ class ReturnRequest(BaseModel):
 
     def __str__(self):
         return f"Return {self.order.id} - {self.status}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["order"]),
+            models.Index(fields=["status"]),
+        ]

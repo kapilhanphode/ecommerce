@@ -5,7 +5,10 @@ from apps.inventory.services.inventory_service import deduct_stock
 from apps.notifications.services.email_service import send_email
 from apps.notifications.utils.email_templates import order_created_email
 from rest_framework.exceptions import ValidationError
+from django.db import transaction
 
+
+@transaction.atomic
 def create_order_from_cart(user):
     cart = Cart.objects.filter(user=user).prefetch_related("items__variant").first()
     if not cart or not cart.items.exists():

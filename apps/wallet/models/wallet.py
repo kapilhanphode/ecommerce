@@ -9,3 +9,8 @@ class Wallet(BaseModel):
 
     def __str__(self):
         return f"Wallet - {self.user}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user"]),
+        ]

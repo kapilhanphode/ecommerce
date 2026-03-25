@@ -13,3 +13,11 @@ class WalletTransaction(models.Model):
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["wallet"]),
+            models.Index(fields=["type"]),
+            models.Index(fields=["created_at"]),
+        ]
