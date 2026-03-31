@@ -1,0 +1,56 @@
+services:
+  web:
+    build: .
+    container_name: ecommerce_web
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000
+      "
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8000"
+    env_file:
+      - .env.docker
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+    container_name: ecommerce_db
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  redis:
+    image: redis:7
+    container_name: ecommerce_redis
+
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    env_file:
+      - .env.docker
+    depends_on:
+      - redis
+      - db
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info
+    env_file:
+      - .env.docker
+    depends_on:
+      - redis
+      - db
+
+volumes:
+  postgres_data:
