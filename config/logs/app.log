@@ -1,4 +1,0 @@
-[2026-03-24 11:35:18,816] INFO django.utils.autoreload Watching for file changes with StatReloader
-[2026-03-24 11:35:18,816] INFO django.utils.autoreload Watching for file changes with StatReloader
-[2026-03-24 11:37:13,532] INFO django.utils.autoreload /home/admin1/Workspace/Django/ecommerce/config/settings/base.py changed, reloading.
-[2026-03-24 11:37:13,532] INFO django.utils.autoreload /home/admin1/Workspace/Django/ecommerce/config/settings/base.py changed, reloading.
